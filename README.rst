@@ -28,10 +28,10 @@ Usage
 Example
 -------
 
-Dump database 1 to file redis.dump::
+Dump database 1 to file ``redis.dump``::
 
     $ ./rdl.py dump redis.dump -n 1
 
-Load to database 1 from file redis.dump::
+Load to database 1 from file ``redis.dump``::
 
     $ ./rdl.py load redis.dump -n 3 -f
