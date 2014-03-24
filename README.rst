@@ -5,6 +5,8 @@ This tool is made specially for dump & load certain database of a redis server,
 if you want to dump whole redis or replicate from one to another,
 please checkout ``redis bgsave`` or ``redis replication`` on google.
 
+NOTE: Package **redis** is required to use this tool.
+
 Usage
 -----
 
