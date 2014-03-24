@@ -55,6 +55,10 @@ def dump(file_name, n):
             buf = ''
             print_loop(loop)
 
+    # In case of not reach limit
+    if buf:
+        write(file_name, buf)
+
     print_loop(loop, False)
 
 
