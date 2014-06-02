@@ -11,7 +11,7 @@ import argparse
 BUF_LIMIT = 1024 * 64  # 64K
 
 
-def write(file_name, buf, initial=False):
+def write_file(file_name, buf, initial=False):
     if initial:
         mode = 'w'
         if os.path.exists(file_name):
@@ -34,14 +34,28 @@ def print_loop(loop, clear=True):
         print s
 
 
-def dump(file_name, n):
-    db = redis.StrictRedis(db=n)
-    print 'Use database %s' % n
+def get_client(n, host=None, port=None):
+    if hasattr(redis, 'StrictRedis'):
+        client_class = redis.StrictRedis
+    else:
+        # Backward compatibility
+        client_class = redis.Redis
+    kwargs = {}
+    if host:
+        kwargs['host'] = host
+    if port:
+        kwargs['port'] = port
+    db = client_class(db=n, **kwargs)
+    print 'Use database %s:%s, db %s' % (host or '<default host>', port or '<default port>', n)
+    # TODO show db info
+    return db
 
+
+def dump(file_name, db):
     buf = ''
     loop = 0
 
-    write(file_name, buf, True)
+    write_file(file_name, buf, True)
 
     for k in db.keys():
         v = db.dump(k)
@@ -50,22 +64,19 @@ def dump(file_name, n):
         loop += 1
 
         if loop % BUF_LIMIT == 0:
-            write(file_name, buf)
+            write_file(file_name, buf)
             # Clear buf
             buf = ''
             print_loop(loop)
 
     # In case of not reach limit
     if buf:
-        write(file_name, buf)
+        write_file(file_name, buf)
 
     print_loop(loop, False)
 
 
-def load(file_name, n, f):
-    db = redis.StrictRedis(db=n)
-    print 'Use database %s' % n
-
+def load(file_name, db, f):
     if f:
         print 'Flush database!'
         db.flushdb()
@@ -85,18 +96,23 @@ def load(file_name, n, f):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Redis dump-load tool.")
+    parser = argparse.ArgumentParser(description="Redis dump-load tool.", add_help=False)
     parser.add_argument('action', metavar="ACTION", type=str, choices=['dump', 'load'], help="`dump` or `load`.")
     parser.add_argument('file_name', metavar="FILE", type=str, help="if action is dump, then its output file, if actions is load, then its source file.")
     parser.add_argument('-n', type=int, default=0, help="Number of database to process.")
+    parser.add_argument('-h', type=str, help="Redis host")
+    parser.add_argument('-p', type=int, help="Redis port")
     parser.add_argument('-f', action='store_true', help="Force or flush database before load")
+    parser.add_argument('--help', action='help', help="show this help message and exit")
 
     args = parser.parse_args()
 
+    db = get_client(args.n, args.h, args.p)
+
     if 'dump' == args.action:
-        dump(args.file_name, args.n)
+        dump(args.file_name, db)
     else:  # load
-        load(args.file_name, args.n, args.f)
+        load(args.file_name, db, args.f)
 
 
 if __name__ == '__main__':
