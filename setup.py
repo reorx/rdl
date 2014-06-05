@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.5'
+__version__ = '1.0.1'
 
 from setuptools import setup
 
@@ -13,7 +13,8 @@ setup(
     version=__version__,
     author='reorx',
     url='http://github.com/reorx/rdl',
-    description=desc,
+    description='Redis dump & load tool.',
+    long_description=desc,
     py_modules=['rdl'],
     entry_points={
         'console_scripts': [

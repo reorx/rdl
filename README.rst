@@ -12,19 +12,21 @@ Usage
 
 ::
 
-    usage: rdl.py [-h] [-n N] [-f] ACTION FILE
+    usage: rdl.py [-n N] [-h H] [-p P] [-f] [--help] ACTION FILE
 
     Redis dump-load tool.
 
     positional arguments:
-      ACTION      `dump` or `load`.
-      FILE        if action is dump, then its output file, if actions is load,
-                  then its source file.
+      ACTION  `dump` or `load`.
+      FILE    if action is dump, then its output file, if actions is load, then
+              its source file.
 
     optional arguments:
-      -h, --help  show this help message and exit
-      -n N        Number of database to process.
-      -f          Force or flush database before load
+      -n N    Number of database to process.
+      -h H    Redis host
+      -p P    Redis port
+      -f      Force or flush database before load
+      --help  show this help message and exit
 
 
 Example
