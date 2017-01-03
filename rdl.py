@@ -104,13 +104,13 @@ def main():
     parser.add_argument('-n', type=int, default=0, help="Number of database to process.")
     parser.add_argument('-h', type=str, help="Redis host")
     parser.add_argument('-p', type=int, help="Redis port")
-    parser.add_argument('-P', type=str, help="Redis password")
+    parser.add_argument('-a', type=str, help="Redis password")
     parser.add_argument('-f', action='store_true', help="Force or flush database before load")
     parser.add_argument('--help', action='help', help="show this help message and exit")
 
     args = parser.parse_args()
 
-    db = get_client(args.n, args.h, args.p, args.P)
+    db = get_client(args.n, args.h, args.p, args.a)
 
     if 'dump' == args.action:
         dump(args.file_name, db)
