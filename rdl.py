@@ -15,8 +15,9 @@ def write_file(file_name, buf, initial=False):
     if initial:
         mode = 'w'
         if os.path.exists(file_name):
-            print 'Warning: %s will be covered!' % file_name
+            print('==> Warning: {} will be covered!'.format(file_name))
     else:
+        print('==> Writing {}, chunk size {}'.format(file_name, len(buf)))
         mode = 'a'
 
     with open(file_name, mode) as f:
@@ -24,14 +25,14 @@ def write_file(file_name, buf, initial=False):
 
 
 def print_loop(loop, clear=True):
-    s = 'processed: %s' % loop
+    s = '==> processed keys: {}'.format(loop)
 
     if clear:
         sys.stdout.write(s)
         sys.stdout.flush()
         sys.stdout.write(len(s) * '\b')
     else:
-        print s
+        print(s)
 
 
 def get_client(n, host=None, port=None, password=None):
@@ -48,7 +49,7 @@ def get_client(n, host=None, port=None, password=None):
     if password:
         kwargs['password'] = password
     db = client_class(db=n, **kwargs)
-    print 'Use database %s:%s, db %s' % (host or '<default host>', port or '<default port>', n)
+    print('==> Use redis {}:{}/{}'.format(host or '<default host>', port or '<default port>', n))
     # TODO show db info
     return db
 
@@ -87,7 +88,7 @@ def dump(file_name, db, ignore_none_value=False):
 
 def load(file_name, db, f):
     if f:
-        print 'Flush database!'
+        print('==> Flush database!')
         db.flushdb()
 
     with open(file_name, 'r') as f:
