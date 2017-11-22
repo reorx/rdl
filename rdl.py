@@ -8,7 +8,7 @@ import base64
 import argparse
 
 
-BUF_LIMIT = 1024 * 64  # 64K
+BUF_LIMIT = 1024 * 2
 
 
 def write_file(file_name, buf, initial=False):
@@ -57,10 +57,14 @@ def get_client(n, host=None, port=None, password=None):
 def dump(file_name, db, ignore_none_value=False):
     buf = ''
     loop = 0
+    initial_write = True
 
-    write_file(file_name, buf, True)
+    keys = db.keys()
+    if not keys:
+        print('Empty db, nothing happened')
+        return
 
-    for k in db.keys():
+    for k in keys:
         v = db.dump(k)
         if v is None:
             msg = 'got None when DUMP key `{}`'.format(k)
@@ -74,16 +78,16 @@ def dump(file_name, db, ignore_none_value=False):
         loop += 1
 
         if loop % BUF_LIMIT == 0:
-            write_file(file_name, buf)
+            write_file(file_name, buf, initial_write)
+            print_loop(loop)
             # Clear buf
             buf = ''
-            print_loop(loop)
+            initial_write = False
 
     # In case of not reach limit
     if buf:
-        write_file(file_name, buf)
-
-    print_loop(loop, False)
+        write_file(file_name, buf, initial_write)
+        print_loop(loop, False)
 
 
 def load(file_name, db, f):
