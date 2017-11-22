@@ -53,7 +53,7 @@ def get_client(n, host=None, port=None, password=None):
     return db
 
 
-def dump(file_name, db):
+def dump(file_name, db, ignore_none_value=False):
     buf = ''
     loop = 0
 
@@ -61,7 +61,14 @@ def dump(file_name, db):
 
     for k in db.keys():
         v = db.dump(k)
-        line = '%s\t%s\n' % (k, base64.b64encode(v))
+        if v is None:
+            msg = 'got None when DUMP key `{}`'.format(k)
+            if ignore_none_value:
+                print('{}, ignore'.format(msg))
+                continue
+            else:
+                raise ValueError(msg)
+        line = '{}\t{}\n'.format(k, base64.b64encode(v))
         buf += line
         loop += 1
 
@@ -106,6 +113,7 @@ def main():
     parser.add_argument('-p', type=int, help="Redis port")
     parser.add_argument('-a', type=str, help="Redis password")
     parser.add_argument('-f', action='store_true', help="Force or flush database before load")
+    parser.add_argument('--ignore-none-value', action='store_true', help="Ignore None when dumping db, by default it will raise ValueError if DUMP result is None")
     parser.add_argument('--help', action='help', help="show this help message and exit")
 
     args = parser.parse_args()
@@ -113,7 +121,7 @@ def main():
     db = get_client(args.n, args.h, args.p, args.a)
 
     if 'dump' == args.action:
-        dump(args.file_name, db)
+        dump(args.file_name, db, args.ignore_none_value)
     else:  # load
         load(args.file_name, db, args.f)
 
