@@ -8,15 +8,16 @@ import base64
 import argparse
 
 
-BUF_LIMIT = 1024 * 64  # 64K
+BUF_LIMIT = 1024 * 2
 
 
 def write_file(file_name, buf, initial=False):
     if initial:
         mode = 'w'
         if os.path.exists(file_name):
-            print 'Warning: %s will be covered!' % file_name
+            print('==> Warning: {} will be covered!'.format(file_name))
     else:
+        print('==> Writing {}, chunk size {}'.format(file_name, len(buf)))
         mode = 'a'
 
     with open(file_name, mode) as f:
@@ -24,14 +25,14 @@ def write_file(file_name, buf, initial=False):
 
 
 def print_loop(loop, clear=True):
-    s = 'processed: %s' % loop
+    s = '==> processed keys: {}'.format(loop)
 
     if clear:
         sys.stdout.write(s)
         sys.stdout.flush()
         sys.stdout.write(len(s) * '\b')
     else:
-        print s
+        print(s)
 
 
 def get_client(n, host=None, port=None, password=None):
@@ -48,39 +49,50 @@ def get_client(n, host=None, port=None, password=None):
     if password:
         kwargs['password'] = password
     db = client_class(db=n, **kwargs)
-    print 'Use database %s:%s, db %s' % (host or '<default host>', port or '<default port>', n)
+    print('==> Use redis {}:{}/{}'.format(host or '<default host>', port or '<default port>', n))
     # TODO show db info
     return db
 
 
-def dump(file_name, db):
+def dump(file_name, db, ignore_none_value=False):
     buf = ''
     loop = 0
+    initial_write = True
 
-    write_file(file_name, buf, True)
+    keys = db.keys()
+    if not keys:
+        print('Empty db, nothing happened')
+        return
 
-    for k in db.keys():
+    for k in keys:
         v = db.dump(k)
-        line = '%s\t%s\n' % (k, base64.b64encode(v))
+        if v is None:
+            msg = 'got None when DUMP key `{}`'.format(k)
+            if ignore_none_value:
+                print('{}, ignore'.format(msg))
+                continue
+            else:
+                raise ValueError(msg)
+        line = '{}\t{}\n'.format(k, base64.b64encode(v))
         buf += line
         loop += 1
 
         if loop % BUF_LIMIT == 0:
-            write_file(file_name, buf)
+            write_file(file_name, buf, initial_write)
+            print_loop(loop)
             # Clear buf
             buf = ''
-            print_loop(loop)
+            initial_write = False
 
     # In case of not reach limit
     if buf:
-        write_file(file_name, buf)
-
-    print_loop(loop, False)
+        write_file(file_name, buf, initial_write)
+        print_loop(loop, False)
 
 
 def load(file_name, db, f):
     if f:
-        print 'Flush database!'
+        print('==> Flush database!')
         db.flushdb()
 
     with open(file_name, 'r') as f:
@@ -106,6 +118,7 @@ def main():
     parser.add_argument('-p', type=int, help="Redis port")
     parser.add_argument('-a', type=str, help="Redis password")
     parser.add_argument('-f', action='store_true', help="Force or flush database before load")
+    parser.add_argument('--ignore-none-value', action='store_true', help="Ignore None when dumping db, by default it will raise ValueError if DUMP result is None")
     parser.add_argument('--help', action='help', help="show this help message and exit")
 
     args = parser.parse_args()
@@ -113,7 +126,7 @@ def main():
     db = get_client(args.n, args.h, args.p, args.a)
 
     if 'dump' == args.action:
-        dump(args.file_name, db)
+        dump(args.file_name, db, args.ignore_none_value)
     else:  # load
         load(args.file_name, db, args.f)
 
