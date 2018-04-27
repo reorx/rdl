@@ -59,7 +59,18 @@ def dump(file_name, db, ignore_none_value=False):
     loop = 0
     initial_write = True
 
-    keys = db.keys()
+    '''
+    Warning: consider KEYS as a command that should only be used in 
+    production environments with extreme care. 
+    It may ruin performance when it is executed against large databases. 
+    This command is intended for debugging and special operations, 
+    such as changing your keyspace layout. 
+    Don't use KEYS in your regular application code. 
+    If you're looking for a way to find keys in a subset of your keyspace, consider using SCAN or sets.
+    '''
+    #keys = db.keys()
+    #have changed using scan command to getting all keys
+    keys = db.scan_iter()
     if not keys:
         print('Empty db, nothing happened')
         return
