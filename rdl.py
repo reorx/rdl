@@ -8,17 +8,30 @@ import base64
 import argparse
 
 
+PY2 = sys.version_info.major == 2
+
+
 BUF_LIMIT = 1024 * 2
+WRITE_MODE = 'wb'
+AWRITE_MODE = 'ab'
+
+
+if PY2:
+    WRITE_MODE = 'w'
+    AWRITE_MODE = 'a'
 
 
 def write_file(file_name, buf, initial=False):
+    """
+    :param bytes buf: buffer to write, in python2 it's type would be str
+    """
     if initial:
-        mode = 'w'
+        mode = WRITE_MODE
         if os.path.exists(file_name):
             print('==> Warning: {} will be covered!'.format(file_name))
     else:
         print('==> Writing {}, chunk size {}'.format(file_name, len(buf)))
-        mode = 'a'
+        mode = AWRITE_MODE
 
     with open(file_name, mode) as f:
         f.write(buf)
@@ -55,14 +68,18 @@ def get_client(n, host=None, port=None, password=None):
 
 
 def dump(file_name, db, ignore_none_value=False):
-    buf = ''
+    buf = b''
     loop = 0
     initial_write = True
 
     # NOTE KEYS may ruin performance when it is executed against large databases.
     # SCAN can be used in production without the downside of commands like KEYS
     for k in db.scan_iter():
+        # `k`is bytes for python3, str for python2
+
+        # dump() returns bytes for python3, str for python2
         v = db.dump(k)
+
         if v is None:
             msg = 'got None when DUMP key `{}`'.format(k)
             if ignore_none_value:
@@ -70,7 +87,9 @@ def dump(file_name, db, ignore_none_value=False):
                 continue
             else:
                 raise ValueError(msg)
-        line = '{}\t{}\n'.format(k, base64.b64encode(v))
+
+        # form the line
+        line = k + b'\t' + base64.b64encode(v) + b'\n'
         buf += line
         loop += 1
 
@@ -78,7 +97,7 @@ def dump(file_name, db, ignore_none_value=False):
             write_file(file_name, buf, initial_write)
             print_loop(loop)
             # Clear buf
-            buf = ''
+            buf = b''
             initial_write = False
 
     # In case of not reach limit
