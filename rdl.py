@@ -59,23 +59,9 @@ def dump(file_name, db, ignore_none_value=False):
     loop = 0
     initial_write = True
 
-    '''
-    Warning: consider KEYS as a command that should only be used in 
-    production environments with extreme care. 
-    It may ruin performance when it is executed against large databases. 
-    This command is intended for debugging and special operations, 
-    such as changing your keyspace layout. 
-    Don't use KEYS in your regular application code. 
-    If you're looking for a way to find keys in a subset of your keyspace, consider using SCAN or sets.
-    '''
-    #keys = db.keys()
-    #have changed using scan command to getting all keys
-    keys = db.scan_iter()
-    if not keys:
-        print('Empty db, nothing happened')
-        return
-
-    for k in keys:
+    # NOTE KEYS may ruin performance when it is executed against large databases.
+    # SCAN can be used in production without the downside of commands like KEYS
+    for k in db.scan_iter():
         v = db.dump(k)
         if v is None:
             msg = 'got None when DUMP key `{}`'.format(k)
@@ -99,6 +85,10 @@ def dump(file_name, db, ignore_none_value=False):
     if buf:
         write_file(file_name, buf, initial_write)
         print_loop(loop, False)
+
+    if not loop:
+        print('Empty db, nothing happened')
+        return
 
 
 def load(file_name, db, f):
