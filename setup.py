@@ -1,27 +1,52 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '1.1.1'
 
 from setuptools import setup
 
-with open('README.rst', 'r') as f:
-    desc = f.read()
+
+package_name = 'rdl'
+
+
+def get_version():
+    import ast
+
+    def parse_version(f):
+        for line in f:
+            if line.startswith('__version__'):
+                return ast.parse(line).body[0].value.s
+
+    for i in [package_name + '/__init__.py', package_name + '.py']:
+        try:
+            with open(i, 'r') as f:
+                return parse_version(f)
+        except IOError:
+            pass
+
+
+def get_long_description():
+    try:
+        with open('README.rst', 'r') as f:
+            return f.read()
+    except IOError:
+        return ''
+
 
 setup(
-    name='rdl',
-    version=__version__,
+    name=package_name,
+    version=get_version(),
     author='reorx',
-    url='http://github.com/reorx/rdl',
+    url='https://github.com/reorx/rdl',
     description='Redis dump & load tool.',
-    long_description=desc,
+    long_description=get_long_description(),
+    license='License :: OSI Approved :: MIT License',
     py_modules=['rdl'],
+    install_requires=[
+        'redis>=2.9'
+    ],
     entry_points={
         'console_scripts': [
             'rdl = rdl:main',
         ]
     },
-    install_requires=[
-        'redis>=2.9'
-    ],
 )

@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding=utf-8
 
 import os
 import sys
 import redis
 import base64
 import argparse
+
+
+__version__ = '1.2.0'
 
 
 PY2 = sys.version_info.major == 2
@@ -140,6 +143,9 @@ def main():
     parser.add_argument('-f', '--flushdb', action='store_true', help="Force or flush database before load")
     parser.add_argument('--ignore-none-value', action='store_true', help="Ignore None when dumping db, by default it will raise ValueError if DUMP result is None")
     parser.add_argument('--help', action='help', help="show this help message and exit")
+    # --version
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {version}'.format(version=__version__))
 
     args = parser.parse_args()
 
