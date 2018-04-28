@@ -134,21 +134,21 @@ def main():
     parser.add_argument('action', metavar="ACTION", type=str, choices=['dump', 'load'], help="`dump` or `load`.")
     parser.add_argument('file_name', metavar="FILE", type=str, help="if action is dump, then its output file, if actions is load, then its source file.")
     parser.add_argument('-n', type=int, default=0, help="Number of database to process.")
-    parser.add_argument('-h', type=str, help="Redis host")
-    parser.add_argument('-p', type=int, help="Redis port")
-    parser.add_argument('-a', type=str, help="Redis password")
-    parser.add_argument('-f', action='store_true', help="Force or flush database before load")
+    parser.add_argument('-h', '--host', type=str, help="Redis host")
+    parser.add_argument('-p', '--port', type=int, help="Redis port")
+    parser.add_argument('-a', '--auth', type=str, help="Redis password")
+    parser.add_argument('-f', '--flushdb', action='store_true', help="Force or flush database before load")
     parser.add_argument('--ignore-none-value', action='store_true', help="Ignore None when dumping db, by default it will raise ValueError if DUMP result is None")
     parser.add_argument('--help', action='help', help="show this help message and exit")
 
     args = parser.parse_args()
 
-    db = get_client(args.n, args.h, args.p, args.a)
+    db = get_client(args.n, args.host, args.port, args.auth)
 
     if 'dump' == args.action:
         dump(args.file_name, db, args.ignore_none_value)
     else:  # load
-        load(args.file_name, db, args.f)
+        load(args.file_name, db, args.flushdb)
 
 
 if __name__ == '__main__':
